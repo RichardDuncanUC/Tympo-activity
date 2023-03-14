@@ -1,6 +1,7 @@
 
   library(tidyverse)
   library(lme4)
+  library(binom)
 
 # read in animal data
   dat <- read.csv("data\\Animal temperature data.csv")
@@ -84,7 +85,7 @@
     geom_point(size = 1, alpha = 0.2, colour = "grey") +
     geom_point(data = subset(mr, n > 5), aes(y = animal_temp, x = whole_temp), size = 2.5) +
     geom_abline(aes(intercept = 0, slope = 1), lwd = 1.1) +
-    geom_hline(yintercept = c(9.9, 40.6)) +
+    geom_hline(yintercept = c(12.1, 38.9)) +
     annotate("text", x = 57, y = 43, parse = T, label = "CT[max]", parse = T, size = 6) +
     annotate("text", x = 57, y = 12, parse = T, label = "CT[min]", parse = T, size = 6) +
     labs(y = y.title, x = x.title) +
@@ -283,9 +284,7 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
 
 ################################################################################
 # plot proportion active by temp groups
-
   out <- mutate(out, five_temp = floor(bom_max / 5))
-
 
   out$tg <- "40+"
   out$tg <- ifelse(out$bom_max < 40, "35-39", out$tg)
@@ -295,7 +294,6 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   out$tg <- ifelse(out$bom_max < 20, "15-19", out$tg)
   out$tg <- ifelse(out$bom_max < 15, "10-14", out$tg)
 
-  
 # number of lizard days per group
   nd <- group_by(out, animal_id, jul_day, tg) %>%
         summarise(n = n()) %>%
@@ -317,10 +315,14 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
              summarise(n = n(),
                        active = sum(active),
                        prop.active = active / n)  
-                       
-
   
+# compute binomial confidence intervals
+  out.binom <- binom.confint(sum.tg$active, sum.tg$n, method = "wilson")
+  sum.tg$lcl <- out.binom$lower
+  sum.tg$ucl <- out.binom$upper
+
   ggplot(sum.tg, aes(y = prop.active, x = floor.hour)) +
+    geom_ribbon(aes(ymin = lcl, ymax = ucl), alpha = 0.1) +
     geom_line(lwd = 1.1) +
     geom_vline(xintercept = 12, lty = 2) +
     facet_wrap(~ ban.lab) +
@@ -329,7 +331,6 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
     theme_bw(12) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
-
 
 ################################################################################
 # now get means to plot 
@@ -371,8 +372,7 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
           axis.text.x=element_text(size=14),
           axis.text.y=element_text(size=14),
           legend.position = "bottom")
-          
-
+    
 ################################################################################
 # metaboilic requirments per day based on temperature
 # read in data
@@ -389,78 +389,90 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   
 # get mean mr per individual at each temp
   mmr <- dat %>%
-         group_by(ged, temp.set) %>%
+         group_by(ged, temp.set, sex) %>%
          summarise(mrkj = mean(mrkj),
                    mr = mean(mr),
                    temp = mean(temp), 
                    n = n())
   
+################################################################################
+# panel figure
+  
+  par(mfrow = c(2, 2), mar = c(5, 5, 2, 1))
+  
+# activity times
+  plot(prop ~ bom_max, data = sum.mean, type = "n", bty = "l",
+       ylab = "Proportion of daylight hours active",
+       xlab = "", cex.lab = 1.4, cex.axis = 1.2,
+       xlim = c(10, 40))
+  symbols(sum.mean$bom_max, sum.mean$prop, circles = sqrt(sum.mean$n / pi),
+          inches = 1/12, add = T, bg = "black")
+  lines(yy ~ xx, data = bp.dat, lwd = 2, col = "red")
+  mtext("A", side = 3, line = 0.5, adj = 0, cex = 1.5)
+  
+  
+# plot metabolic rates    
 # fit model taking into account repeated measures on individuals
   m0 <- lmer(log(mr) ~ log(temp) + (1|ged), data = mmr)
   summary(m0)
+  
+# test for sex differences
+  m0s <- lmer(log(mr) ~ log(temp) + sex + (1|ged), data = mmr)
+  summary(m0s)
+# extract coefficients
+  coefs <- data.frame(coef(summary(m0s)))
+# use normal distribution to approximate p-value
+  coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
+  coefs
   
 # line to plot
   xx <- seq(min(mmr$temp), max(mmr$temp), 0.1)
   yy <- exp(fixef(m0)[1] + fixef(m0)[2] * log(xx))
   
-# plot
-  par(mfrow = c(1, 1), mar = c(5, 5, 1, 1))
   plot(mr ~ temp, data = mmr, bty = "l", pch = 19, cex = 1.5,
-     xlab = "Temperature (?C)", cex.lab = 1.4, cex.axis = 1.2,
-     ylab = expression(paste("Metabolic rate (ml ",O[2], g^-1, h^-1, ")")))
-    lines(yy ~ xx, lwd = 2)
-
-
-################################################################################
-# panel figure
-
-  par(mfrow = c(2, 2), mar = c(5, 5, 1, 1))
-  plot(prop ~ bom_max, data = sum.mean, type = "n", bty = "l",
-       ylab = "Proportion of daylight hours active",
-       xlab = "", cex.lab = 1,
-       xlim = c(10, 40))
-
-    symbols(sum.mean$bom_max, sum.mean$prop, circles = sqrt(sum.mean$n / pi),
-            inches = 1/12, add = T, bg = "black")
-    lines(yy ~ xx, data = bp.dat, lwd = 2, col = "red")
-
+       xlab = "Temperature (\u00B0C)", cex.lab = 1.4, cex.axis = 1.2,
+       ylab = expression(paste("Metabolic rate (ml ",O[2], g^-1, h^-1, ")")))
+  lines(yy ~ xx, lwd = 2, col = "red")
+  mtext("B", side = 3, line = 0.5, adj = 0, cex = 1.5)
+  
 # daily metabolic requirements and proporiton of time active
   day.out <- sum.out %>%
-             mutate(met.rate = exp(fixef(m0)[1] + fixef(m0)[2] * log(animal_temp))) %>%
-             group_by(bom_max) %>%
-             summarise(n = max(n.liz),
-                       met.rate = mean(met.rate),
-                       prop = mean(prop.active),
-                       mp = met.rate / prop) %>%
-             filter(mp != "Inf")
-
+    mutate(met.rate = exp(fixef(m0)[1] + fixef(m0)[2] * log(animal_temp))) %>%
+    group_by(bom_max) %>%
+    summarise(n = max(n.liz),
+              met.rate = mean(met.rate),
+              prop = mean(prop.active),
+              mp = met.rate / prop) %>%
+    filter(mp != "Inf")
+  
 # mean metabolic rate
   m3 <- loess(met.rate ~ bom_max, control = loess.control(surface = "direct"), data = day.out)
   
   nd <- data.frame(bom_max = seq(14, 40, 0.01))
   yy <- predict(m3, newdata = nd)
-
+  
   plot(met.rate ~ bom_max, type = "n", data = day.out, bty = "l",
        ylab = expression(paste("Mean metabolic rate (ml", O[2], g^-1, h^-1, ")")),
-       xlab = "\nDaily maximum air temperature (?C)", cex.lab = 1,
+       xlab = "\nDaily maximum air temperature (\u00B0C)", cex.lab = 1.4, cex.axis = 1.2,
        xlim = c(10, 40))
-    symbols(day.out$bom_max, day.out$met.rate, circles = sqrt(day.out$n / pi),
-            inches = 1/12, add = T, bg = "black")
-    lines(yy ~ nd$bom_max, lwd = 2, col = "red")
-    
+  symbols(day.out$bom_max, day.out$met.rate, circles = sqrt(day.out$n / pi),
+          inches = 1/12, add = T, bg = "black")
+  lines(yy ~ nd$bom_max, lwd = 2, col = "red")
+  mtext("C", side = 3, line = 0.5, adj = 0, cex = 1.5)
+  
 # mean metabolic cost
   m3.1 <- loess(mp ~ bom_max, control = loess.control(surface = "direct"), data = day.out)
-
+  
   yy <- predict(m3.1, newdata = nd)
-
+  
   plot(mp ~ bom_max, type = "n", data = day.out, bty = "l",
        ylab = expression(paste("Mean energetic cost (kJ ", g^-1, h^-1, ")")),
-       xlab = "\nDaily maximum air temperature (?C)", cex.lab = 1,
+       xlab = "\nDaily maximum air temperature (\u00B0C)", cex.lab = 1.4, cex.axis = 1.2,
        xlim = c(10, 40))
-    symbols(day.out$bom_max, day.out$mp, circles = sqrt(day.out$n / pi),
-            inches = 1/12, add = T, bg = "black")
-    lines(yy ~ nd$bom_max, lwd = 2, col = "red")
-
+  symbols(day.out$bom_max, day.out$mp, circles = sqrt(day.out$n / pi),
+          inches = 1/12, add = T, bg = "black")
+  lines(yy ~ nd$bom_max, lwd = 2, col = "red")
+  mtext("D", side = 3, line = 0.5, adj = 0, cex = 1.5)
 
 ################################################################################
 ################################################################################
