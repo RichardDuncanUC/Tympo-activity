@@ -129,7 +129,7 @@
     facet_wrap(~ five_temp, scale = "free_y", ncol = 3) +
     scale_y_continuous(breaks = NULL) +
     ylab("Relative frequency\n") +
-    xlab("\nTemperature (?C)") +
+    xlab("\nTemperature (\u00B0C)") +
     xlim(-2, 72) +
     theme_classic(12) +
     theme(strip.background = element_blank(),
@@ -350,6 +350,7 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   
 # fit quadratic regression to these data
   m1 <- lm(prop ~ bom_max + I(bom_max^2), data = sum.mean)
+  summary(m1)
 
 # dataframe to plot quadratic regression
   xx <- seq(11, 40, 0.1)
@@ -482,7 +483,7 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   
 # select summer months
   cd <- filter(cd, month %in% c(12, 1, 2)) %>%
-        mutate(year = ifelse(month == 12, year + 1, year)) %>%
+        mutate(year = ifelse(month %in% c(10, 11, 12), year + 1, year)) %>%
         filter(year > 1940 & year < 2021)
         
   head(cd)
@@ -513,6 +514,9 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   plot(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) >= 0, "red", "blue"), lwd = 2,
        ylab = "Temperature anomaly (degrees C)", xlab = "", bty = "l")
+    polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = "grey90", border = NA)
+    points(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
+       col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2)
     lines(predict(m4) ~ sum.y$year, lwd = 2)
 
   m5 <- loess(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, data = sum.y, span = 0.3)
@@ -520,6 +524,9 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   plot(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2,
        ylab = "Proportional change in daily activity", xlab = "Year", bty = "l")
+    polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = "grey90", border = NA)
+    points(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
+       col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2)
     lines(predict(m5) ~ sum.y$year, lwd = 2)
 
   m6 <- loess(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) / overall.mean.mg ~ year, data = sum.y, span = 0.3)
@@ -527,6 +534,9 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   plot(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) / overall.mean.mg ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) >= 0, "red", "blue"), lwd = 2,
        ylab = "Proportional change in energetic cost", xlab = "Year", bty = "l")
+    polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = "grey90", border = NA)
+    points(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
+       col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2)
     lines(predict(m6) ~ sum.y$year, lwd = 2)
 
 
