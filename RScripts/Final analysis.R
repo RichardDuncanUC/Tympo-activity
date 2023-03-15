@@ -65,8 +65,8 @@
     theme_classic(14) +
     theme(axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
-          axis.text.x=element_text(size=14),
-          axis.text.y=element_text(size=14))
+          axis.text=element_text(size=14),
+          axis.title=element_text(size=18))
   
   
 ################################################################################
@@ -86,16 +86,16 @@
     geom_point(data = subset(mr, n > 5), aes(y = animal_temp, x = whole_temp), size = 2.5) +
     geom_abline(aes(intercept = 0, slope = 1), lwd = 1.1) +
     geom_hline(yintercept = c(12.1, 38.9)) +
-    annotate("text", x = 57, y = 43, parse = T, label = "CT[max]", parse = T, size = 6) +
-    annotate("text", x = 57, y = 12, parse = T, label = "CT[min]", parse = T, size = 6) +
+    annotate("text", x = 57, y = 40, parse = T, label = "CT[max]", parse = T, size = 6) +
+    annotate("text", x = 57, y = 13.5, parse = T, label = "CT[min]", parse = T, size = 6) +
     labs(y = y.title, x = x.title) +
     scale_x_continuous(limits=c(-1,60), breaks=seq(0,60,10))+
     scale_y_continuous(limits=c(-1,70), breaks=seq(0,70,10))+
     theme_classic(14) +
     theme(axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
-          axis.text.x=element_text(size=14),
-          axis.text.y=element_text(size=14))
+          axis.text=element_text(size=14),
+          axis.title=element_text(size=18))
   
 
 ###############################################################################
@@ -330,7 +330,10 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
     xlab("\nTime of day (hour)") +
     theme_bw(12) +
     theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank())
+          panel.grid.minor = element_blank(),
+          strip.text.x = element_text(size = 18),
+          axis.text=element_text(size=14),
+          axis.title=element_text(size=18))
 
 ################################################################################
 # now get means to plot 
@@ -370,8 +373,7 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
     theme_classic(14) +
     theme(axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
-          axis.text.x=element_text(size=14),
-          axis.text.y=element_text(size=14),
+          axis.text=element_text(size=14),
           legend.position = "bottom")
     
 ################################################################################
@@ -507,37 +509,43 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
   overall.mean.act
   overall.mean.mg
 
-  par(mfrow = c(2, 2), mar = c(5, 5, 1, 1))
+  par(mfrow = c(2, 2), mar = c(5, 5, 3, 1))
   
   m4 <- loess(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) ~ year, data = sum.y, span = 0.3)
 
   plot(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) >= 0, "red", "blue"), lwd = 2,
-       ylab = "Temperature anomaly (degrees C)", xlab = "", bty = "l")
+       ylab = "Temperature anomaly (\u00B0C)", xlab = "", bty = "l", cex.lab = 1.4, cex.axis = 1.2, xaxt = "n")
     polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = "grey90", border = NA)
     points(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2)
     lines(predict(m4) ~ sum.y$year, lwd = 2)
+    axis(side = 1, cex.axis = 1.2)
+  mtext("A", side = 3, line = 0.5, adj = 0, cex = 1.5)
 
   m5 <- loess(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, data = sum.y, span = 0.3)
 
   plot(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2,
-       ylab = "Proportional change in daily activity", xlab = "Year", bty = "l")
+       ylab = "Proportional change in daily activity", xlab = "Year", bty = "l", cex.lab = 1.4, cex.axis = 1.2, xaxt = "n")
     polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = "grey90", border = NA)
     points(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2)
     lines(predict(m5) ~ sum.y$year, lwd = 2)
+    axis(side = 1, cex.axis = 1.2)
+  mtext("B", side = 3, line = 0.5, adj = 0, cex = 1.5)
 
   m6 <- loess(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) / overall.mean.mg ~ year, data = sum.y, span = 0.3)
 
   plot(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) / overall.mean.mg ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) >= 0, "red", "blue"), lwd = 2,
-       ylab = "Proportional change in energetic cost", xlab = "Year", bty = "l")
+       ylab = "Proportional change in energetic cost", xlab = "Year", bty = "l", cex.lab = 1.4, cex.axis = 1.2, xaxt = "n")
     polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = "grey90", border = NA)
     points(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
        col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2)
     lines(predict(m6) ~ sum.y$year, lwd = 2)
+    axis(side = 1, cex.axis = 1.2)
+  mtext("C", side = 3, line = 0.5, adj = 0, cex = 1.5)
 
 
 ################################################################################
