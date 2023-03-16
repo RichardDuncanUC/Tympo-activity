@@ -504,35 +504,37 @@ pl <- function(dd, aa, ss, width.inc = 1, sd.inc = 1) {
                      mean.act = mean(da),
                      mean.mg = mean(mg))
   
-  overall.mean.act <-  mean(sum.y$mean.act[sum.y$year %in% 1960:1990])
-  overall.mean.mg <- mean(sum.y$mean.mg[sum.y$year %in% 1960:1990])
+  anom.yr <- 1960:1990
+  
+  overall.mean.act <-  mean(sum.y$mean.act[sum.y$year %in% anom.yr])
+  overall.mean.mg <- mean(sum.y$mean.mg[sum.y$year %in% anom.yr])
   overall.mean.act
   overall.mean.mg
 
   par(mfrow = c(2, 2), mar = c(5, 5, 3, 1))
   
-  m4 <- loess(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) ~ year, data = sum.y, span = 0.3)
+  m4 <- loess(scale(mean_bom, center = mean(mean_bom[year %in% anom.yr]), scale = F) ~ year, data = sum.y, span = 0.3)
 
-  plot(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) ~ year, type = "h", data = sum.y,
-       col = ifelse(scale(mean_bom, center = mean(mean_bom[year %in% 1960:1990]), scale = F) >= 0, "red", "blue"), lwd = 2,
+  plot(scale(mean_bom, center = mean(mean_bom[year %in% anom.yr]), scale = F) ~ year, type = "h", data = sum.y,
+       col = ifelse(scale(mean_bom, center = mean(mean_bom[year %in% anom.yr]), scale = F) >= 0, "red", "blue"), lwd = 2,
        ylab = "Temperature anomaly (\u00B0C)", xlab = "", bty = "l", cex.lab = 1.4, cex.axis = 1.2)
   polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = rgb(0, 0, 0, 0.1), border = NA)
   lines(predict(m4) ~ sum.y$year, lwd = 2)
   mtext("A", side = 3, line = 0.5, adj = 0, cex = 1.5)
 
-  m5 <- loess(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, data = sum.y, span = 0.3)
+  m5 <- loess(scale(mean.act, center = mean(mean.act[year %in% anom.yr]), scale = F) / overall.mean.act ~ year, data = sum.y, span = 0.3)
 
-  plot(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
-       col = ifelse(scale(mean.act, center = mean(mean.act[year %in% 1960:1990]), scale = F) >= 0, "blue", "red"), lwd = 2,
+  plot(scale(mean.act, center = mean(mean.act[year %in% anom.yr]), scale = F) / overall.mean.act ~ year, type = "h", data = sum.y,
+       col = ifelse(scale(mean.act, center = mean(mean.act[year %in% anom.yr]), scale = F) >= 0, "blue", "red"), lwd = 2,
        ylab = "Proportional change in daily activity", xlab = "Year", bty = "l", cex.lab = 1.4, cex.axis = 1.2)
   polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = rgb(0, 0, 0, 0.1), border = NA)
   lines(predict(m5) ~ sum.y$year, lwd = 2)
   mtext("B", side = 3, line = 0.5, adj = 0, cex = 1.5)
 
-  m6 <- loess(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) / overall.mean.mg ~ year, data = sum.y, span = 0.3)
+  m6 <- loess(scale(mean.mg, center = mean(mean.mg[year %in% anom.yr]), scale = F) / overall.mean.mg ~ year, data = sum.y, span = 0.3)
 
-  plot(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) / overall.mean.mg ~ year, type = "h", data = sum.y,
-       col = ifelse(scale(mean.mg, center = mean(mean.mg[year %in% 1960:1990]), scale = F) >= 0, "red", "blue"), lwd = 2,
+  plot(scale(mean.mg, center = mean(mean.mg[year %in% anom.yr]), scale = F) / overall.mean.mg ~ year, type = "h", data = sum.y,
+       col = ifelse(scale(mean.mg, center = mean(mean.mg[year %in% anom.yr]), scale = F) >= 0, "red", "blue"), lwd = 2,
        ylab = "Proportional change in energetic cost", xlab = "Year", bty = "l", cex.lab = 1.4, cex.axis = 1.2)
   polygon(x = c(2006, 2010, 2010, 2006), y = c(-3, -3, 5, 5), col = rgb(0, 0, 0, 0.1), border = NA)
   lines(predict(m6) ~ sum.y$year, lwd = 2)
